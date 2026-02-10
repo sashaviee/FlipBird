@@ -5,6 +5,117 @@ from settings import *
 from database import GameDatabase
 
 
+class GameView(arcade.View):
+    def __init__(self, level=1, initial_score=0):
+        super().__init__()
+        self.level = level
+        self.score = initial_score
+
+        # Положение птицы
+        self.bird_x = SCREEN_WIDTH // 3
+        self.bird_y = SCREEN_HEIGHT // 2
+        self.bird_velocity = 0
+
+        # Простые трубы для демонстрации
+        self.pipes = []
+
+        # Физика
+        self.gravity = 0.5
+        self.jump_strength = -10
+
+        # Флаг игры
+        self.game_active = True
+
+    def on_show(self):
+        arcade.set_background_color(BACKGROUND_COLOR)
+
+    def on_draw(self):
+        arcade.start_render()
+
+        # Фон
+        arcade.draw_lrbt_rectangle_filled(
+            0, SCREEN_WIDTH, SCREEN_HEIGHT, 0,
+            BACKGROUND_COLOR
+        )
+
+        # Птица
+        arcade.draw_lrbt_rectangle_filled(
+            self.bird_x,
+            self.bird_y,
+            BIRD_SIZE, BIRD_SIZE,
+            (255, 255, 0)
+        )
+
+        # Счет
+        arcade.draw_text(
+            f"Score: {self.score}",
+            20,
+            SCREEN_HEIGHT - 40,
+            TEXT_COLOR,
+            24
+        )
+
+        arcade.draw_text(
+            f"Level: {self.level}",
+            20,
+            SCREEN_HEIGHT - 80,
+            TEXT_COLOR,
+            24
+        )
+
+        # Инструкция
+        arcade.draw_text(
+            "Press SPACE to jump",
+            SCREEN_WIDTH // 2,
+            50,
+            TEXT_COLOR,
+            20,
+            anchor_x="center"
+        )
+
+        if not self.game_active:
+            arcade.draw_text(
+                "Game Over! Press R to restart",
+                SCREEN_WIDTH // 2,
+                SCREEN_HEIGHT // 2,
+                arcade.color.RED,
+                30,
+                anchor_x="center"
+            )
+
+    def on_update(self, delta_time):
+        if not self.game_active:
+            return
+
+        # Гравитация
+        self.bird_velocity += self.gravity
+        self.bird_y += self.bird_velocity
+
+        # Проверка границ
+        if self.bird_y < 0 or self.bird_y > SCREEN_HEIGHT:
+            self.game_active = False
+
+        # Простая логика завершения уровня (для демонстрации)
+        if self.score >= 5:  # Например, 5 очков для перехода на следующий уровень
+            level_complete_view = LevelCompleteView(self.level, self.score)
+            self.window.show_view(level_complete_view)
+
+    def on_key_press(self, key, modifiers):
+        if key == arcade.key.SPACE and self.game_active:
+            self.bird_velocity = self.jump_strength
+            self.score += 1  # Просто для демонстрации
+
+        if key == arcade.key.R and not self.game_active:
+            # Рестарт игры
+            game_view = GameView()
+            self.window.show_view(game_view)
+
+        if key == arcade.key.ESCAPE:
+            # Возврат в главное меню
+            start_view = StartView()
+            self.window.show_view(start_view)
+
+
 class StartView(arcade.View):
     def __init__(self):
         super().__init__()
@@ -27,7 +138,8 @@ class StartView(arcade.View):
         arcade.start_render()
 
         # Фон
-        arcade.draw_lrtb_rectangle_filled(
+
+        arcade.draw_lrbt_rectangle_filled(
             0, SCREEN_WIDTH, SCREEN_HEIGHT, 0,
             BACKGROUND_COLOR
         )
@@ -52,7 +164,7 @@ class StartView(arcade.View):
         )
 
         # Птица на стартовом экране
-        arcade.draw_rectangle_filled(
+        arcade.draw_lrbt_rectangle_filled(
             SCREEN_WIDTH // 2,
             SCREEN_HEIGHT // 2,
             BIRD_SIZE, BIRD_SIZE,
@@ -60,7 +172,7 @@ class StartView(arcade.View):
         )
 
         # Кнопка старта
-        arcade.draw_rectangle_filled(
+        arcade.draw_lrbt_rectangle_filled(
             SCREEN_WIDTH // 2,
             SCREEN_HEIGHT // 3,
             200, 60,
@@ -144,7 +256,7 @@ class GameOverView(arcade.View):
         arcade.start_render()
 
         # Полупрозрачный фон
-        arcade.draw_lrtb_rectangle_filled(
+        arcade.draw_lrbt_rectangle_filled(
             0, SCREEN_WIDTH, SCREEN_HEIGHT, 0,
             (0, 0, 0, 200)
         )
@@ -179,7 +291,7 @@ class GameOverView(arcade.View):
         )
 
         # Кнопки
-        arcade.draw_rectangle_filled(
+        arcade.draw_lrbt_rectangle_filled(
             SCREEN_WIDTH // 2 - 150,
             SCREEN_HEIGHT // 2,
             200, 50,
@@ -195,7 +307,7 @@ class GameOverView(arcade.View):
             anchor_y="center"
         )
 
-        arcade.draw_rectangle_filled(
+        arcade.draw_lrbt_rectangle_filled(
             SCREEN_WIDTH // 2 + 150,
             SCREEN_HEIGHT // 2,
             200, 50,
@@ -282,7 +394,7 @@ class LevelCompleteView(arcade.View):
             anchor_x="center"
         )
 
-        arcade.draw_rectangle_filled(
+        arcade.draw_lrbt_rectangle_filled(
             SCREEN_WIDTH // 2,
             SCREEN_HEIGHT // 3,
             200, 50,
