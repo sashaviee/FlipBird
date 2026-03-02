@@ -1,10 +1,14 @@
 import arcade
 import random
 from pyglet.graphics import Batch
+import sqlite3
 
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 700
 SCREEN_TITLE = "Flappy bird"
+
+con = sqlite3.connect('Databirds.db')
+cursor = con.cursor()
 
 backsound = arcade.load_sound("sounds/backsound.mp3")
 hlop = arcade.load_sound("sounds/hlop.mp3")
@@ -51,6 +55,8 @@ class GameView(arcade.View):
         if self.player.started:
             self.player.move(delta_time)
         if self.player.dead:
+            cursor.execute('INSERT INTO Users (scores) VALUES (?)',(self.score,))
+            con.commit()
             self.window.show_view(GameOverView())
         if self.new_pipe.center_x < SCREEN_WIDTH - 300:
             self.new_pipe = Pipe()
@@ -226,11 +232,20 @@ class GameOverView(arcade.View):
         self.background_color = arcade.color.RED_ORANGE  # Фон для меню
 
         self.batch = Batch()
+        self.record = cursor.execute('SELECT MAX(scores) FROM Users').fetchone()[0]
         self.main_text = arcade.Text("GAME OVER", self.window.width / 2, self.window.height / 2 + 50,
                                      arcade.color.WHITE, font_size=40,font_name="Comic Sans MS", anchor_x="center", batch=self.batch)
-        self.space_text = arcade.Text("Нажми ESCAPE, чтобы выйти!", self.window.width / 2, self.window.height / 2 - 50,
-                                      arcade.color.WHITE, font_size=15,font_name="Comic Sans MS", anchor_x="center", batch=self.batch)
+
+        self.space_text = arcade.Text(f"Нажми ESCAPE, чтобы выйти!", self.window.width / 2, self.window.height / 2 - 50,
+                                      arcade.color.WHITE, font_size=10,font_name="Comic Sans MS", anchor_x="center", batch=self.batch)
+
+        self.z_text = arcade.Text(f"Рекорд:{self.record}", self.window.width / 2, self.window.height - 175,
+                                      arcade.color.WHITE, font_size=40,font_name="Comic Sans MS", anchor_x="center", batch=self.batch)
+
+
+
         self.background = arcade.load_texture("images/Background2.png")
+
 
     def on_draw(self):
         self.clear()
@@ -248,3 +263,6 @@ window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT,SCREEN_TITLE)
 menu_view = MenuView()
 window.show_view(menu_view)
 arcade.run()
+
+
+con.close()
