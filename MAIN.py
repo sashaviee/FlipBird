@@ -6,6 +6,11 @@ SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 700
 SCREEN_TITLE = "Flappy bird"
 
+backsound = arcade.load_sound("sounds/backsound.mp3")
+hlop = arcade.load_sound("sounds/hlop.mp3")
+lose = arcade.load_sound("sounds/lose.mp3")
+scorez = arcade.load_sound("sounds/score.mp3")
+
 bird_picture = "images/Bird.png"
 
 class GameView(arcade.View):
@@ -27,6 +32,9 @@ class GameView(arcade.View):
         self.pipe_list.append(self.new_pipe_pair)
 
         self.background = arcade.load_texture("images/Background.png")
+        arcade.play_sound(backsound, volume=0.1, loop=True)
+
+
 
     def on_draw(self):
         self.clear()
@@ -51,6 +59,7 @@ class GameView(arcade.View):
             self.pipe_list.append(self.new_pipe_pair)
         if self.player.center_x - self.player.radius > self.current_pipe.center_x + 0.5 * self.current_pipe.width + 3:
             self.score += 1
+            arcade.play_sound(scorez, volume=0.2)
         if self.player.moving:
             for pipe in self.pipe_list:
                 pipe.update(delta_time)
@@ -59,6 +68,7 @@ class GameView(arcade.View):
             self.hit_list = arcade.check_for_collision_with_list(self.player, self.pipe_list)
             if len(self.hit_list) > 0:
                 self.player.moving = False
+                arcade.play_sound(lose, volume=1)
                 self.player.change_y = 5
         self.batch = Batch()
         self.fonts = arcade.Text(
@@ -147,7 +157,9 @@ class Bird(arcade.Sprite):
 
     def jump_up(self):
         if self.moving and not self.dead:
+            arcade.play_sound(hlop, volume=0.3)
             self.change_y = 10
+
 
 
 
@@ -189,6 +201,8 @@ class MenuView(arcade.View):
         self.space_text = arcade.Text("Нажми SPACE(LM), чтобы начать!", self.window.width / 2, self.window.height / 2 - 50,
                                       arcade.color.WHITE, font_size=10,font_name="Comic Sans MS", anchor_x="center", batch=self.batch)
         self.background = arcade.load_texture("images/Background.png")
+
+
 
     def on_draw(self):
         self.clear()
